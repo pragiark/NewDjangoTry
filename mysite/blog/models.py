@@ -2,6 +2,11 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 
+#Custom model Manager
+class PublishedManager(models.Manager):
+    def get_queryset(self):
+        return super(PublishedManager, self).get_queryset().filter(status='published')
+
 class Post(models.Model):
     STATUS_CHOICED = (
         ('draft', 'Draft'),
@@ -20,8 +25,14 @@ class Post(models.Model):
     status = models.CharField(max_length=10,
                               choices=STATUS_CHOICED,
                               default='draft')
+    # Segments custom manager
+    objects = models.Manager()  # manager domyslny
+    published = PublishedManager()  # Manadzer niestandardowy
+
     class Meta:
         ordering = ('-publish',)
 
     def __str__(self):
         return self.title
+
+
