@@ -3,6 +3,7 @@ from .models import Post
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
 from .forms import EmailPostForm
+from django.core.mail import send_mail
 
 def post_list(request):
     object_list = Post.published.all()
@@ -35,14 +36,20 @@ class PostListView(ListView):
 def post_share(request, post_id):
     # pobranie posta na podstawie jego identyfikatora
     post = get_object_or_404(Post, id=post_id, status='published')
+    sent = False
 
     if request.method == 'POST':
-        #Formularz wysłany
+        # Formularz wysłany
         form = EmailPostForm(request.POST)
         if form.is_valid():
-            #weryfikacja pól zakończona powodzeniem
+            # weryfikacja pól zakończona powodzeniem
             cd = form.cleaned_data
-            #w .... więc mozna wysłać formularz
+            post_url = request.build_absolute_url(post.get_absolute_url())
+            subject = '{} ({}) zachęcia do przeczytania "{}"'.format(cd['name'], cd['email'], post.title)
+            massage = 'Przeczytaj post "{}| na stronie {}\n\n Komentarz dodany przez {}: {}'.format
+            (post.title,post.url, cd['name'], cd['comments'])
+            send_mail(subject,massage, 'admin@myblog.com', [cd['to']])
+            # w .... więc mozna wysłać formularz
         else:
             form = EmailPostForm()
-        return  render(request, 'blog/post/share.html', {'post': post, 'form': form})
+        return  render(request, 'blog/post/share.html', {'post': post, 'form': form, 'sent' : sent})
